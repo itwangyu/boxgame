@@ -1,9 +1,9 @@
 import 'package:boxgame/BoxGame.dart';
+import 'package:boxgame/base/IComponent.dart';
 import 'package:flame/sprite.dart';
 import 'package:flutter/cupertino.dart';
 
-class Fly {
-  BoxGame game;
+class Fly extends IComponent {
   double _x, _y;
   Rect rect;
   bool isDead = false;
@@ -14,11 +14,12 @@ class Fly {
   double zoom = 1;
   Offset targetLocation;
 
-  Fly(this.game, this._x, this._y, this.zoom) {
+  Fly(game, this._x, this._y, this.zoom) : super(game) {
     rect = Rect.fromLTWH(_x, _y, game.tileSize * zoom, game.tileSize * zoom);
     setTargetLocation();
   }
 
+  @override
   void render(Canvas canvas) {
     if (isDead) {
       deadSprite.renderRect(canvas, rect.inflate(2));
@@ -31,15 +32,16 @@ class Fly {
 
   double get speed => game.tileSize * 3;
 
+  @override
   void update(double t) {
     if (isDead) {
       //苍蝇死掉了，位置向下平移
       rect = rect.translate(0, game.tileSize * 12 * t);
     } else {
       flyingSpriteIndex += 30 * t;
-      // if (flyingSpriteIndex >= 2) {
-      //   flyingSpriteIndex -= 2;
-      // }
+      if (flyingSpriteIndex >= 2) {
+        flyingSpriteIndex -= 2;
+      }
       //速度*时间=苍蝇每帧需要移动的距离
       double distance = speed * t;
       //用目标位置-当前位置=距离目标的偏移量
@@ -73,7 +75,8 @@ class Fly {
     targetLocation = Offset(x, y);
   }
 
-  void onTapDown() {
+  @override
+  void onTapDown(TapDownDetails details) {
     isDead = true;
   }
 }

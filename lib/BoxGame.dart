@@ -1,11 +1,14 @@
 import 'dart:math';
 import 'dart:ui';
 
+import 'package:boxgame/PageState.dart';
 import 'package:boxgame/components/AgileFly.dart';
 import 'package:boxgame/components/DroolerFly.dart';
 import 'package:boxgame/components/HouseFly.dart';
 import 'package:boxgame/components/HungryFly.dart';
 import 'package:boxgame/components/MachoFly.dart';
+import 'package:boxgame/components/StartButton.dart';
+import 'package:boxgame/views/HomeView.dart';
 import 'package:flame/flame.dart';
 import 'package:flame/game.dart';
 import 'package:flame/gestures.dart';
@@ -14,7 +17,7 @@ import 'package:flutter/material.dart';
 import 'components/Backyard.dart';
 import 'components/Fly.dart';
 
-class BoxGame extends Game with TapDetector {
+class BoxGame extends Game {
   Random mRandom = Random();
 
   //屏幕尺寸
@@ -26,7 +29,17 @@ class BoxGame extends Game with TapDetector {
   //苍蝇的集合
   List<Fly> flyList = [];
 
+  ///背景组件
   Backyard backyard;
+
+  ///记录当前的页面状态
+  PageState currentPageState = PageState.PLAY;
+
+  //标题view
+  HomeView homeView;
+
+  //开始按钮
+  StartButton startButton;
 
   BoxGame() {
     initialize();
@@ -35,7 +48,8 @@ class BoxGame extends Game with TapDetector {
   void initialize() async {
     resize(await Flame.util.initialDimensions());
     backyard = Backyard(this);
-
+    homeView = HomeView(this);
+    startButton = StartButton(this);
     spawnFly();
   }
 
@@ -75,26 +89,57 @@ class BoxGame extends Game with TapDetector {
     if (backyard == null) {
       return;
     }
+    //画背景
     backyard.render(canvas);
     //画苍蝇
     flyList.forEach((Fly fly) {
       fly.render(canvas);
     });
+
+    switch (currentPageState) {
+      case PageState.HOME:
+        //画标题
+        homeView.render(canvas);
+        //开始按钮
+        startButton.render(canvas);
+        break;
+      case PageState.PLAY:
+        break;
+      case PageState.LOSE:
+        startButton.render(canvas);
+        break;
+    }
   }
 
   @override
   void onTapDown(TapDownDetails details) {
-    super.onTapDown(details);
+    // super.onTapDown(details);
+    //按照渲染的组件倒序分发点击事件 这个变量标记点击事件是否被处理
+    bool handle = false;
+    //记录用户是否点击到了苍蝇
     bool touch = false;
-    flyList.forEach((fly) {
-      if (fly.rect.contains(details.globalPosition) && !fly.isDead) {
-        fly.onTapDown();
-        touch = true;
-      }
-    });
-    if (touch) {
-      spawnFly();
-    }
+
+    // if (!handle &&
+    //     startButton.rect.contains(details.globalPosition) &&
+    //     (currentPageState == PageState.HOME ||
+    //         currentPageState == PageState.LOSE)) {
+    //   handle = true;
+    //   startButton.onTapDown(details);
+    // }
+    //
+    // if (!handle) {
+    //   flyList.forEach((fly) {
+    //     if (fly.rect.contains(details.globalPosition) && !fly.isDead) {
+    //       fly.onTapDown(details);
+    //       touch = true;
+    //       handle = true;
+    //     }
+    //   });
+    // }
+    //
+    // if (touch) {
+    //   spawnFly();
+    // }
   }
 
   @override
@@ -103,6 +148,6 @@ class BoxGame extends Game with TapDetector {
     flyList.forEach((Fly fly) {
       fly.update(t);
     });
-    flyList.removeWhere((element) => element.isOutScreen);
+    // flyList.removeWhere((element) => element.isOutScreen);
   }
 }
